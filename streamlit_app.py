@@ -32,6 +32,13 @@ class FlightCentreScraper:
         else:
             return None
     
+    def determine_icon(self, title):
+        """Determine the appropriate icon based on the title"""
+        if title and "at sea" in title.lower():
+            return "sea"
+        else:
+            return "location"
+    
     def check_robots_txt(self, base_url):
         """Check robots.txt to understand crawling restrictions"""
         try:
@@ -97,7 +104,7 @@ class FlightCentreScraper:
             day_info = {}
             
             # Initialize all required keys
-            day_info['icon'] = ""
+            day_info['icon'] = "location"  # Default icon value
             day_info['day'] = ""
             day_info['title'] = ""
             day_info['image'] = ""
@@ -126,6 +133,8 @@ class FlightCentreScraper:
                 if location_h5:
                     location_text = location_h5.get_text(strip=True)
                     day_info['title'] = self.clean_text(location_text)
+                    # Set icon based on title
+                    day_info['icon'] = self.determine_icon(day_info['title'])
                 
                 # Look for description in the content-wrap div
                 content_wrap = second_div.find('div', class_='content-wrap')
@@ -200,8 +209,8 @@ class FlightCentreScraper:
         for item in day_items:
             day_info = {}
             
-            # Initialize all required keys including empty icon and image
-            day_info['icon'] = ""
+            # Initialize all required keys including default icon
+            day_info['icon'] = "location"  # Default icon value
             day_info['day'] = ""
             day_info['title'] = ""
             day_info['image'] = ""
@@ -226,6 +235,8 @@ class FlightCentreScraper:
                     # Remove "Day X: " from the title, keeping only what comes after
                     clean_title = re.sub(r'^Day \d+:\s*', '', title_text)
                     day_info['title'] = clean_title
+                    # Set icon based on title
+                    day_info['icon'] = self.determine_icon(day_info['title'])
                 else:
                     # If it doesn't match "Day X:" pattern, skip this item (likely an inclusion)
                     continue
@@ -381,7 +392,7 @@ def main():
                 st.subheader("Itinerary")
                 if result['itinerary']:
                     for day in result['itinerary']:
-                        with st.expander(f"Day {day['day']}: {day['title']}"):
+                        with st.expander(f"({day['icon']}) Day {day['day']}: {day['title']}"):
                             st.write(day['body'])
                 else:
                     st.write("No itinerary days found")
